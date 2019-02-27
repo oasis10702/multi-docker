@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t hiro/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run hiro/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t oasis10702/multi-client ./client
+  - docker build -t oasis10702/multi-nginx ./nginx
+  - docker build -t oasis10702/multi-server ./server
+  - docker build -t oasis10702/multi-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push oasis10702/multi-client
+  - docker push oasis10702/multi-nginx
+  - docker push oasis10702/multi-server
+  - docker push oasis10702/multi-worker
